@@ -1,55 +1,47 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'node18'
+    environment {
+        // Optional: set NODE_ENV if needed
+        NODE_ENV = 'production'
     }
 
     stages {
         stage('Checkout') {
             steps {
+                // Pull code from GitHub
                 git branch: 'main', url: 'https://github.com/KAVIYARASUCCE027/BLOG-APP-DEVOPS.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
+                // Install npm packages
                 sh 'npm install'
             }
         }
 
         stage('Build') {
             steps {
+                // Build React app
                 sh 'npm run build'
             }
         }
 
-        stage('Docker Build') {
+        stage('Archive Build') {
             steps {
-                script {
-                    docker.build('kavi/blog-frontend')
-                }
-            }
-        }
-
-        stage('Deploy Container') {
-            steps {
-                script {
-                    // Stop old container (if running)
-                    sh 'docker rm -f blog-frontend || true'
-                    // Run new one
-                    sh 'docker run -d -p 3000:80 --name blog-frontend kavi/blog-frontend'
-                }
+                // Save build artifacts in Jenkins
+                archiveArtifacts artifacts: 'build/**', fingerprint: true
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build and deployment successful!'
+            echo 'Build completed successfully!'
         }
         failure {
-            echo '❌ Build failed!'
+            echo 'Build failed!'
         }
     }
 }
